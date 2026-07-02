@@ -29,13 +29,11 @@ function GraduateQualityPage() {
   const [tableYearFilter, setTableYearFilter] = useState("");
 
   // 1. โหลดข้อมูลจริงจาก localStorage
+  const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
-    const stored = localStorage.getItem("dashboardData");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const evalData = parsed["ผลการประเมินคุณภาพบัณฑิต"] || [];
-      setRawData(evalData);
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
   }, []);
 
   const cleanString = (str) => {
