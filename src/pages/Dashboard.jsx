@@ -40,7 +40,6 @@ function Dashboard() {
   });
 
   const [graphSelectedYear, setGraphSelectedYear] = useState("");
-  const [dashboardData, setDashboardData] = useState(null);
 
   // โหลดข้อมูลจาก localStorage
   const [dashboardData, setDashboardData] = useState(null);
