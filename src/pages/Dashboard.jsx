@@ -49,10 +49,6 @@ function Dashboard() {
       .then(setDashboardData);
   }, []);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
   const cleanString = (str) => {
     if (!str) return "";
     return String(str).replace(/\s+/g, '').replace(/['"]+/g, '').trim();
