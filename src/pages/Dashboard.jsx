@@ -43,12 +43,12 @@ function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
 
   // โหลดข้อมูลจาก localStorage
-  const loadDashboardData = () => {
-    const stored = localStorage.getItem("dashboardData");
-    if (stored) {
-      setDashboardData(JSON.parse(stored));
-    }
-  };
+  const [dashboardData, setDashboardData] = useState(null);
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
+  }, []);
 
   useEffect(() => {
     loadDashboardData();
