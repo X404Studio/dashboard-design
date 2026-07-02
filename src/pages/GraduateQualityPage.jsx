@@ -26,6 +26,11 @@ function GraduateQualityPage() {
   const [selectedMajor, setSelectedMajor] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({ year: "", major: "" });
   const [rawData, setRawData] = useState([]);
+  useEffect(() => {
+    if (dashboardData) {
+      setRawData(dashboardData["ผลการประเมินคุณภาพบัณฑิต"] || []);
+    }
+  }, [dashboardData]);
   const [tableYearFilter, setTableYearFilter] = useState("");
 
   // 1. โหลดข้อมูลจริงจาก localStorage
