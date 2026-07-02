@@ -25,6 +25,11 @@ function FacultyPage() {
   const [selectedMajor, setSelectedMajor] = useState("");
   const [searchText, setSearchText] = useState("");
   const [rawData, setRawData] = useState([]);
+  useEffect(() => {
+    if (dashboardData) {
+      setRawData(dashboardData["อาจารย์สาขา"] || []);
+    }
+  }, [dashboardData]);
   const [tableMajorFilter, setTableMajorFilter] = useState("");
 
   // 1. โหลดข้อมูลอาจารย์จาก localStorage
