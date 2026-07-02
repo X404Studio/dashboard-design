@@ -27,9 +27,8 @@ function EmploymentPage() {
     const stored = localStorage.getItem("dashboardData");
     if (stored) {
       const parsed = JSON.parse(stored);
-      // ค้นหาคีย์แผ่นงานที่มีคำว่า "งานทำ" หรือ "Employment"
       const targetKey = Object.keys(parsed).find(key => 
-        key.includes("งานทำ") || key.includes("Employment")
+        key.includes("ภาวะการมีงานทำ_detail") || key.includes("Employment")
       );
       const empData = targetKey ? parsed[targetKey] : [];
       setRawData(empData);
