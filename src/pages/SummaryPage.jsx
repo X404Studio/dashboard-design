@@ -17,12 +17,14 @@ import Sidebar from "../components/Sidebar";
 const { Header, Content } = Layout;
 
 function SummaryPage() {
-  const dashboardData =
-  JSON.parse(
-    localStorage.getItem("dashboardData")
-  ) || {};
+  const [dashboardData, setDashboardData] = useState(null);
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
+  }, []);
 
-  const students =
+const students =
 dashboardData?.["จำนวนนิสิตลงทะเบียน"] || [];
 
 const teachers =
