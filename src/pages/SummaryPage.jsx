@@ -1,5 +1,5 @@
+import { useState, useEffect } from "react";
 import { Layout, Card } from "antd";
-
 import {
   BarChart,
   Bar,
@@ -10,7 +10,6 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  
 } from "recharts";
 import Sidebar from "../components/Sidebar";
 
