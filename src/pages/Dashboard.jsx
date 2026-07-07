@@ -41,7 +41,7 @@ function Dashboard() {
 
   const [graphSelectedYear, setGraphSelectedYear] = useState("");
 
-  // โหลดข้อมูลจาก localStorage
+  // โหลดข้อมูลจาก Database
   const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
