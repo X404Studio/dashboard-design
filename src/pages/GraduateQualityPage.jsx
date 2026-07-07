@@ -33,7 +33,7 @@ function GraduateQualityPage() {
   }, [dashboardData]);
   const [tableYearFilter, setTableYearFilter] = useState("");
 
-  // 1. โหลดข้อมูลจริงจาก localStorage
+  // 1. โหลดข้อมูลจริงจาก Database
   const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
