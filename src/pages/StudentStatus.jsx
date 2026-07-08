@@ -31,17 +31,15 @@ function StudentStatus() {
     search: ""
   });
 
+  // ดึงข้อมูลจาก Database
   const [dashboardData, setDashboardData] = useState(null);
-
-  // ดึงข้อมูลจากฐานข้อมูลจำลอง (localStorage)
   useEffect(() => {
-    const stored = localStorage.getItem("dashboardData");
-    if (stored) {
-      setDashboardData(JSON.parse(stored));
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
   }, []);
 
-  // สมมติชื่อ Object ใน localStorage (สามารถปรับให้ตรงกับคีย์จริงในไฟล์ระบบคุณได้เลยครับ)
+  // สมมติชื่อ Object ใน localStorage
   const dropoutData = dashboardData?.["นิสิตลาออก"] || [];
   const dismissedData = dashboardData?.["นิสิตพ้นสภาพ"] || [];
   const expelledData = dashboardData?.["นิสิตถูกคัดชื่อ"] || [];
