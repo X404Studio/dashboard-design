@@ -37,7 +37,7 @@ const EmploymentTable = ({ dataSource, yearsList, cleanString, extractYear }) =>
           return foundKey ? Number(item[foundKey] || 0) : 0;
         };
 
-        const respondents = getVal("ผู้บันทึกข้อมูลจำนวน") || getVal("ผู้สำเร็จการศึกษา"); 
+        const respondents = getVal("ผู้บันทึกข้อมูล จำนวน") || getVal("ผู้สำเร็จการศึกษา");
         const gov = getVal("ทำงานในหน่วยงานรัฐ จำนวน");
         const state = getVal("ทำงานในหน่วยงานรัฐวิสาหกิจ จำนวน");
         const privateOrg = getVal("ทำงานในหน่วยงานเอกชน จำนวน");
@@ -49,7 +49,7 @@ const EmploymentTable = ({ dataSource, yearsList, cleanString, extractYear }) =>
         const hasJobBefore = getVal("มีงานทำเดิม");
         const studyMore = getVal("ศึกษาต่อ");
         const ordain = getVal("บัณฑิตบวช");
-        const military = getVal("บัณฑ์ิตเกณฑ์ทหาร");
+        const military = getVal("บัณฑิตเกณฑ์ทหาร");
         const excluded = hasJobBefore + studyMore + ordain + military;
 
         const dividend = employedStaff + selfEmployed;
@@ -126,27 +126,26 @@ function EmploymentPage() {
   const [appliedFilters, setAppliedFilters] = useState({ year: "", major: "" });
   const [rawData, setRawData] = useState([]);
   const [staticDataForTable, setStaticDataForTable] = useState([]); 
+  
   const [uploadedChartRaw, setUploadedChartRaw] = useState([]);
 
+  const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
-    const stored = localStorage.getItem("dashboardData");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      
-      const targetKey = Object.keys(parsed).find(key => 
-        key.includes("งานทำ") || key.includes("Employment")
-      );
-      const empData = targetKey ? parsed[targetKey] : [];
-      setRawData(empData);
-
-      if (parsed["employment_chart_data"] && parsed["employment_chart_data"].length > 0) {
-        setUploadedChartRaw(parsed["employment_chart_data"]);
-      } else {
-        setUploadedChartRaw([]);
-      }
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
   }, []);
 
+  useEffect(() => {
+    if (dashboardData) {
+      setRawData(dashboardData["ภาวะการมีงานทำ"] || []);
+    }
+  }, [dashboardData]);
+  useEffect(() => {
+    if (dashboardData) {
+     setStaticDataForTable(dashboardData["ภาวะการมีงานทำ"] || []);
+    }
+  }, [dashboardData]);
   const cleanString = (str) => {
     if (!str) return "";
     return String(str).replace(/\s+/g, '').replace(/['"]+/g, '').trim();
@@ -192,7 +191,7 @@ function EmploymentPage() {
           return foundKey ? Number(item[foundKey] || 0) : 0;
         };
 
-        const respondents = getVal("ผู้บันทึกข้อมูลจำนวน") || getVal("ผู้สำเร็จการศึกษา"); 
+        const respondents = getVal("ผู้บันทึกข้อมูล จำนวน") || getVal("ผู้สำเร็จการศึกษา"); 
         const gov = getVal("ทำงานในหน่วยงานรัฐ จำนวน");
         const state = getVal("ทำงานในหน่วยงานรัฐวิสาหกิจ จำนวน");
         const privateOrg = getVal("ทำงานในหน่วยงานเอกชน จำนวน");
