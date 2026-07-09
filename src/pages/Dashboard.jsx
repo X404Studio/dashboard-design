@@ -252,7 +252,7 @@ const cleanString = (str) => {
           <div style={{ background: "white", borderRadius: 16, padding: 24, marginTop: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <BarChartOutlined style={{ fontSize: 18, color: "#52c41a" }} />
+                <BarChartOutlined style={{ fontSize: 18, color: "#5a8bba" }} />
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>นิสิตคงอยู่ (ปีที่สำรวจ) - จำแนกตามสาขาวิชา (ภาคปลาย)</h2>
               </div>
               {availableSurveyYears.length > 0 && (
@@ -272,7 +272,7 @@ const cleanString = (str) => {
                     <XAxis type="number" />
                     <YAxis dataKey="name" type="category" width={180} />
                     <Tooltip formatter={(value) => `${value.toLocaleString()} คน`} />
-                    <Bar dataKey="count" fill="#52c41a" radius={[0, 4, 4, 0]} barSize={18}>
+                    <Bar dataKey="count" fill="#5a8bba" radius={[0, 4, 4, 0]} barSize={18}>
                       <LabelList dataKey="count" position="right" style={{ fontSize: 12, fontWeight: 600 }} dx={8} />
                     </Bar>
                   </BarChart>
@@ -285,7 +285,7 @@ const cleanString = (str) => {
           <div style={{ background: "white", borderRadius: 16, padding: 24, marginTop: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <BarChartOutlined style={{ fontSize: 18, color: "#13c2c2" }} />
+                <BarChartOutlined style={{ fontSize: 18, color: "#74c0c6" }} />
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>นิสิตคงอยู่ (ปีศึกษาที่รับเข้า) - จำแนกตามสาขาวิชา (ภาคต้น)</h2>
               </div>
               {availableAdmitYears.length > 0 && (
@@ -305,7 +305,7 @@ const cleanString = (str) => {
                     <XAxis type="number" />
                     <YAxis dataKey="name" type="category" width={180} />
                     <Tooltip formatter={(value) => `${value.toLocaleString()} คน`} />
-                    <Bar dataKey="count" fill="#13c2c2" radius={[0, 4, 4, 0]} barSize={18}>
+                    <Bar dataKey="count" fill="#74c0c6" radius={[0, 4, 4, 0]} barSize={18}>
                       <LabelList dataKey="count" position="right" style={{ fontSize: 12, fontWeight: 600 }} dx={8} />
                     </Bar>
                   </BarChart>
