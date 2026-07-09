@@ -28,13 +28,19 @@ function FacultyPage() {
   const [rawData, setRawData] = useState([]);
   const [tableMajorFilter, setTableMajorFilter] = useState("");
 
-  // 1. โหลดข้อมูลอาจารย์จาก localStorage
+  // 1. โหลดข้อมูลอาจารย์จาก Database
   const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
       .then(r => r.json())
       .then(setDashboardData);
   }, []);
+
+  useEffect(() => {
+    if (dashboardData) {
+     setRawData(dashboardData["อาจารย์สาขา"] || []);
+   }
+  }, [dashboardData]);
 
   const cleanString = (str) => {
     if (!str) return "";
