@@ -1,4 +1,4 @@
-import { Layout, Table, Button, Progress, Card, Empty } from "antd"; // เพิ่ม Empty สำหรับทำกราฟเปล่า
+import { Layout, Table, Button, Progress, Card, Empty } from "antd";
 import Sidebar from "../components/Sidebar";
 import { useMemo, useState, useEffect } from "react";
 import {
@@ -29,23 +29,21 @@ function EvaluationPage() {
   const [rawData, setRawData] = useState([]);
   const [tableYearFilter, setTableYearFilter] = useState("");
 
-  // 🌟 State เพิ่มเติม: สำหรับเก็บข้อมูลกราฟประเมินแยกรายองค์ประกอบที่ได้มาจากช่องอัปโหลดใหม่
   const [evalGraphData, setEvalGraphData] = useState([]);
 
-  // 1. โหลดข้อมูลจริงจาก localStorage
+  // 1. โหลดข้อมูลจริงจาก Database
+  const [dashboardData, setDashboardData] = useState(null);
   useEffect(() => {
-    const stored = localStorage.getItem("dashboardData");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // ดึงคีย์ "ผลการประเมินคุณภาพหลักสูตร" จาก Excel (ระบบเดิม)
-      const evalData = parsed["ผลการประเมินคุณภาพหลักสูตร"] || [];
-      setRawData(evalData);
-
-      // 🌟 ดึงคีย์ข้อมูลตัวใหม่ "ข้อมูลประเมินคุณภาพ" ที่อัปโหลดมาจากหน้า UploadPage เพื่อนำมาวาดกราฟ
-      const customEvalGraph = parsed["ข้อมูลประเมินคุณภาพ"] || [];
-      setEvalGraphData(customEvalGraph);
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/api/dashboard-data`)
+      .then(r => r.json())
+      .then(setDashboardData);
   }, []);
+
+    useEffect(() => {
+      if (dashboardData) {
+       setRawData(dashboardData["ผลการประเมินคุณภาพหลักสูตร"] || []);
+      }
+    }, [dashboardData]);
 
   const cleanString = (str) => {
     if (!str) return "";
@@ -121,8 +119,8 @@ function EvaluationPage() {
       
       const c2 = Number(item["องค์ที่ 2 บัณฑิต"] || 0);
       const c3 = Number(item["องค์ที่ 3 นิสิต"] || 0);
-      const c4 = Number(item["องค์ที่ 4อาจารย์"] || 0);
-      const c5 = Number(item["องค์ที่ 5หลักสูตร การเรียนการสอน การประเมินผู้เรียน"] || 0);
+      const c4 = Number(item["องค์ที่ 4 อาจารย์"] || 0);
+      const c5 = Number(item["องค์ที่ 5 หลักสูตร การเรียนการสอน การประเมินผู้เรียน"] || 0);
       const c6 = Number(item["องค์ที่ 6 สิ่งสนับสนุนการเรียนรู้"] || 0);
 
       if (inp > 0) { sumInput += inp; cInput++; }
@@ -159,8 +157,8 @@ function EvaluationPage() {
     { title: "Output", dataIndex: "Output", key: "Output", align: "center", render: v => v || "-" },
     { title: "องค์ฯ 2 บัณฑิต", dataIndex: "องค์ที่ 2 บัณฑิต", key: "c2", align: "center", render: v => v || "-" },
     { title: "องค์ฯ 3 นิสิต", dataIndex: "องค์ที่ 3 นิสิต", key: "c3", align: "center", render: v => v || "-" },
-    { title: "องค์ฯ 4 อาจารย์", dataIndex: "องค์ที่ 4อาจารย์", key: "c4", align: "center", render: v => v || "-" },
-    { title: "องค์ฯ 5 หลักสูตร", dataIndex: "องค์ที่ 5หลักสูตร การเรียนการสอน การประเมินผู้เรียน", key: "c5", align: "center", render: v => v || "-" },
+    { title: "องค์ฯ 4 อาจารย์", dataIndex: "องค์ที่ 4 อาจารย์", key: "c4", align: "center", render: v => v || "-" },
+    { title: "องค์ฯ 5 หลักสูตร", dataIndex: "องค์ที่ 5 หลักสูตร การเรียนการสอน การประเมินผู้เรียน", key: "c5", align: "center", render: v => v || "-" },
     { title: "องค์ฯ 6 สิ่งสนับสนุน", dataIndex: "องค์ที่ 6 สิ่งสนับสนุนการเรียนรู้", key: "c6", align: "center", render: v => v || "-" },
     { title: "คะแนนเฉลี่ยรวม", dataIndex: "คะแนนเฉลี่ยรวม", key: "total", align: "center", render: v => <span style={{ color: "#722ed1", fontWeight: "bold" }}>{v || "-"}</span> },
   ];
@@ -269,7 +267,7 @@ function EvaluationPage() {
             </div>
           </div>
 
-          {/* 🌟 CHART ZONE (ปรับเงื่อนไขแสดงผลตามที่คุณต้องการแบบ 100%) */}
+          {/* 🌟 CHART ZONE (ปรับเงื่อนไขแสดงผลตามต้องการแบบ 100%) */}
           <div style={{ background: "white", padding: 24, borderRadius: 16, marginBottom: 24 }}>
             <h3 style={{ marginBottom: 20 }}>แผนภูมิเปรียบเทียบผลการประเมินคุณภาพรายองค์ประกอบ</h3>
             
