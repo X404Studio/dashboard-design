@@ -351,4 +351,3 @@ function FacultyPage() {
 }
 
 export default FacultyPage;
-export default FacultyPage;
