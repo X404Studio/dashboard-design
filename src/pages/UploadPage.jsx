@@ -29,7 +29,6 @@ const { Header, Content } = Layout;
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
  
 // เดาตารางที่น่าจะตรงจากชื่อไฟล์แบบเบาๆ (แค่ pre-select ให้ ผู้ใช้ยังต้องยืนยันเองผ่าน preview)
-// ไม่ auto-insert เด็ดขาด เพราะ backend ตรวจ column count เข้มงวดอยู่แล้ว
 function guessTableFromFilename(filename, tables) {
   const clean = filename.toLowerCase();
   const keywordMap = {
@@ -88,7 +87,7 @@ function UploadPage() {
     fetchTables();
   }, []);
  
-  // ── เลือกไฟล์ (ไม่ parse ที่เบราว์เซอร์แล้ว — backend จัดการให้) ──
+  // ── เลือกไฟล์ ──
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -102,7 +101,7 @@ function UploadPage() {
     setSelectedFile(file);
     setFileName(file.name);
  
-    // เดาตารางให้เบาๆ จากชื่อไฟล์ — แค่ pre-select ไม่ auto-confirm
+    // เดาตารางให้เบาๆ จากชื่อไฟล์
     if (!tableName) {
       const guessed = guessTableFromFilename(file.name, tables);
       if (guessed) {
@@ -372,20 +371,6 @@ function UploadPage() {
                 >
                   ตรวจสอบไฟล์ก่อนนำเข้า
                 </Button>
-              </Card>
- 
-              {/* หมายเหตุ: ฟีเจอร์อัปโหลดกราฟสาขาแยก ยังไม่มีตารางรองรับใน Backend */}
-              <Card
-                title="อัปโหลดไฟล์กราฟสาขา"
-                style={{ borderRadius: 16, border: "1px solid #ffd591", opacity: 0.7 }}
-                bodyStyle={{ padding: 20 }}
-              >
-                <Alert
-                  type="warning"
-                  showIcon
-                  message="ฟีเจอร์นี้ยังไม่เชื่อมกับฐานข้อมูล"
-                  description="ต้องเพิ่มตารางใหม่ใน Backend (table_registry.py) ก่อนใช้งานได้ — แจ้งทีม Backend เพื่อออกแบบตารางเพิ่มเติม"
-                />
               </Card>
             </div>
  
