@@ -9,7 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  LabelList
 } from "recharts";
 import { 
   SearchOutlined, 
@@ -270,6 +271,13 @@ function GraduateQualityPage() {
                   <YAxis domain={[0, 5]} axisLine={false} tickLine={false} />
                   <Tooltip cursor={{fill: '#f0fdfa'}} />
                   <Bar dataKey="score" radius={[8, 8, 0, 0]} barSize={50}>
+                    <LabelList 
+                      dataKey="score" 
+                      position="top" 
+                      dy={-10} 
+                      style={{ fill: '#475569', fontSize: 12, fontWeight: 'bold' }} 
+                      formatter={(val) => Number(val).toFixed(2)}
+                    />
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -285,7 +293,7 @@ function GraduateQualityPage() {
               <h3 style={{ margin: 0 }}>รายละเอียดคะแนนการประเมินแยกตามปีและสาขา</h3>
               
               <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f9fafb", padding: "6px 12px", borderRadius: 10, border: "1px solid #e5e7eb" }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "#4b5563" }}>เลือกปีดูในตาราง:</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "#4b5563" }}>ปีการศึกษา:</span>
                 <select 
                   value={tableYearFilter} 
                   onChange={(e) => setTableYearFilter(e.target.value)} 
