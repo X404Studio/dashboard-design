@@ -33,7 +33,7 @@ function Sidebar() {
           fontSize: 22,
           fontWeight: "bold",
           textAlign: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderBottom: "1px solid rgba(193, 28, 28, 0.1)",
           marginBottom: 10
         }}
       >
@@ -93,7 +93,7 @@ function Sidebar() {
           },
           {
             key: "/graduate-quality",
-            icon: <IdcardOutlined style={{ color: "#13c2c2" }} />, // สีฟ้าครามพรีเมียม
+            icon: <IdcardOutlined style={{ color: "#13c2c2" }} />,
             label: "ผลประเมินคุณภาพบัณฑิต",
           },
         ]}
