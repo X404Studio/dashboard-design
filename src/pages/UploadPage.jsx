@@ -11,59 +11,107 @@ import {
   Table,
   Alert,
   Tag,
+  Popconfirm,
+  Space,
 } from "antd";
 import {
   UploadOutlined,
   FileExcelOutlined,
   CheckCircleOutlined,
-  BarChartOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
-
+ 
 const { Header, Content } = Layout;
-
+ 
 // ตั้งค่า URL ของ Backend — Vite ใช้ import.meta.env แทน process.env ของ Next.js
-// ต้องมีไฟล์ .env ที่ root ของโปรเจ็ค มีบรรทัด: VITE_API_URL=https://xxxxx
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
+ 
+// เดาตารางที่น่าจะตรงจากชื่อไฟล์แบบเบาๆ (แค่ pre-select ให้ ผู้ใช้ยังต้องยืนยันเองผ่าน preview)
+// ไม่ auto-insert เด็ดขาด เพราะ backend ตรวจ column count เข้มงวดอยู่แล้ว
+function guessTableFromFilename(filename, tables) {
+  const clean = filename.toLowerCase();
+  const keywordMap = {
+    tcas_admission: ["tcas"],
+    student_enrollment: ["ลงทะเบียน", "enrollment"],
+    student_retention: ["คงอยู่", "retention"],
+    graduate_employment: ["งานทำ", "employment"],
+    curriculum_quality: ["หลักสูตร", "curriculum"],
+    graduate_quality: ["บัณฑิต", "graduate"],
+    h_index: ["hindex", "h-index"],
+    research_output: ["วิจัย", "research"],
+    student_status: ["สถานภาพ", "status"],
+  };
+  for (const [tableName, keywords] of Object.entries(keywordMap)) {
+    if (keywords.some((k) => clean.includes(k))) {
+      const exists = tables.find((t) => t.table_name === tableName);
+      if (exists) return tableName;
+    }
+  }
+  return undefined;
+}
+ 
 function UploadPage() {
-  // ── State: รายชื่อตารางจาก backend ──────────────────────────────
+  // ── State: รายชื่อตารางจาก backend (มี row_count ด้วย) ──────────
   const [tables, setTables] = useState([]);
   const [tableName, setTableName] = useState(undefined);
-
+  const [tablesLoading, setTablesLoading] = useState(false);
+ 
   // ── State: ไฟล์ที่เลือก ──────────────────────────────────────────
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState("");
-
+ 
   // ── State: ผลลัพธ์จาก /preview และ modal ────────────────────────
   const [previewData, setPreviewData] = useState(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // ── โหลดรายชื่อตารางตอนเข้าหน้า ──────────────────────────────────
-  useEffect(() => {
+ 
+  // ── State: modal ดูข้อมูลในตาราง ──────────────────────────────────
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+ 
+  // ── โหลดรายชื่อตาราง (เรียกซ้ำได้หลัง insert/delete เพื่อ refresh row_count) ──
+  const fetchTables = () => {
+    setTablesLoading(true);
     fetch(`${API}/api/tables`)
       .then((res) => res.json())
       .then((data) => setTables(data))
       .catch(() =>
         message.error("โหลดรายชื่อตารางไม่ได้ — ตรวจสอบว่า Backend กำลังทำงานอยู่")
-      );
+      )
+      .finally(() => setTablesLoading(false));
+  };
+ 
+  useEffect(() => {
+    fetchTables();
   }, []);
-
+ 
   // ── เลือกไฟล์ (ไม่ parse ที่เบราว์เซอร์แล้ว — backend จัดการให้) ──
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+ 
     const ext = file.name.split(".").pop().toLowerCase();
     if (!["xlsx", "csv"].includes(ext)) {
       message.error("รองรับเฉพาะไฟล์ .xlsx และ .csv เท่านั้น");
       return;
     }
-
+ 
     setSelectedFile(file);
     setFileName(file.name);
+ 
+    // เดาตารางให้เบาๆ จากชื่อไฟล์ — แค่ pre-select ไม่ auto-confirm
+    if (!tableName) {
+      const guessed = guessTableFromFilename(file.name, tables);
+      if (guessed) {
+        setTableName(guessed);
+        message.info(`ระบบเดาว่าไฟล์นี้น่าจะเป็นตาราง "${guessed}" — กรุณาตรวจสอบก่อนยืนยัน`);
+      }
+    }
   };
-
+ 
   // ── Step 1: ส่งไฟล์ไปตรวจสอบ (preview) ───────────────────────────
   const handlePreview = async () => {
     if (!tableName) {
@@ -74,28 +122,27 @@ function UploadPage() {
       message.warning("กรุณาเลือกไฟล์ก่อน");
       return;
     }
-
+ 
     setLoading(true);
     const form = new FormData();
     form.append("table_name", tableName);
     form.append("file", selectedFile);
-
+ 
     try {
       const res = await fetch(`${API}/api/upload/preview`, {
         method: "POST",
         body: form,
       });
       const data = await res.json();
-
+ 
       if (!res.ok) {
-        // FastAPI ส่ง { detail: "..." } กลับมาเมื่อ error
         const detail = Array.isArray(data.detail)
           ? data.detail.join(" / ")
           : data.detail || "เกิดข้อผิดพลาด";
         message.error(detail);
         return;
       }
-
+ 
       setPreviewData(data);
       setPreviewModalOpen(true);
     } catch (err) {
@@ -104,7 +151,7 @@ function UploadPage() {
       setLoading(false);
     }
   };
-
+ 
   // ── Step 2: ยืนยันนำเข้าจริง (confirm) ───────────────────────────
   const handleConfirm = () => {
     Modal.confirm({
@@ -124,12 +171,12 @@ function UploadPage() {
             }),
           });
           const result = await res.json();
-
+ 
           if (!res.ok) {
             message.error(result.detail || "นำเข้าไม่สำเร็จ");
             return;
           }
-
+ 
           if (result.status === "ok") {
             message.success(
               `นำเข้าสำเร็จ ${result.inserted} แถว` +
@@ -140,13 +187,13 @@ function UploadPage() {
               `นำเข้าบางส่วน: สำเร็จ ${result.inserted} / ผิดพลาด ${result.error_count} แถว`
             );
           }
-
-          // reset ทุกอย่างกลับสู่สถานะเริ่มต้น
+ 
           setPreviewModalOpen(false);
           setPreviewData(null);
           setSelectedFile(null);
           setFileName("");
           setTableName(undefined);
+          fetchTables(); // รีเฟรช row_count ให้ตรงกับข้อมูลใหม่ทันที
         } catch (err) {
           message.error("เชื่อมต่อ Backend ไม่ได้ระหว่างนำเข้าข้อมูล");
         } finally {
@@ -155,7 +202,46 @@ function UploadPage() {
       },
     });
   };
-
+ 
+  // ── ดูข้อมูลในตาราง ────────────────────────────────────────────────
+  const handleViewData = async (table) => {
+    setViewLoading(true);
+    setViewModalOpen(true);
+    try {
+      const res = await fetch(`${API}/api/tables/${table.table_name}/data?limit=100`);
+      const data = await res.json();
+      if (!res.ok) {
+        message.error(data.detail || "โหลดข้อมูลไม่สำเร็จ");
+        setViewModalOpen(false);
+        return;
+      }
+      setViewData(data);
+    } catch (err) {
+      message.error("เชื่อมต่อ Backend ไม่ได้");
+      setViewModalOpen(false);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+ 
+  // ── ลบข้อมูลทั้งตาราง ────────────────────────────────────────────
+  const handleDeleteData = async (table) => {
+    try {
+      const res = await fetch(`${API}/api/tables/${table.table_name}/data`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        message.error(result.detail || "ลบข้อมูลไม่สำเร็จ");
+        return;
+      }
+      message.success(result.message);
+      fetchTables(); // รีเฟรช row_count
+    } catch (err) {
+      message.error("เชื่อมต่อ Backend ไม่ได้ระหว่างลบข้อมูล");
+    }
+  };
+ 
   // ── สร้าง columns สำหรับ antd Table จาก preview ──────────────────
   const previewColumns =
     previewData?.columns.map((col) => ({
@@ -165,7 +251,16 @@ function UploadPage() {
       ellipsis: true,
       width: 140,
     })) || [];
-
+ 
+  const viewColumns =
+    viewData?.columns.map((col) => ({
+      title: col,
+      dataIndex: col,
+      key: col,
+      ellipsis: true,
+      width: 140,
+    })) || [];
+ 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />
@@ -188,7 +283,7 @@ function UploadPage() {
             </div>
           </div>
         </Header>
-
+ 
         <Content style={{ padding: "16px 32px 32px 32px", background: "#f5f5f5" }}>
           <div
             style={{
@@ -217,11 +312,11 @@ function UploadPage() {
                     onChange={setTableName}
                     options={tables.map((t) => ({
                       value: t.table_name,
-                      label: `${t.label} (${t.table_name})`,
+                      label: `${t.label} (${t.table_name}) — ${t.row_count} แถว`,
                     }))}
                   />
                 </div>
-
+ 
                 {/* เลือกไฟล์ */}
                 <div
                   style={{
@@ -250,7 +345,7 @@ function UploadPage() {
                     รองรับ .xlsx และ .csv (รวม CSV UTF-8)
                   </div>
                 </div>
-
+ 
                 {fileName && (
                   <div
                     style={{
@@ -266,7 +361,7 @@ function UploadPage() {
                     <b>ไฟล์ที่เลือก:</b> {fileName}
                   </div>
                 )}
-
+ 
                 <Button
                   type="primary"
                   icon={<CheckCircleOutlined />}
@@ -278,9 +373,8 @@ function UploadPage() {
                   ตรวจสอบไฟล์ก่อนนำเข้า
                 </Button>
               </Card>
-
-              {/* หมายเหตุ: ฟีเจอร์อัปโหลดกราฟสาขาแยก ยังไม่มีตารางรองรับใน Backend
-                  ต้องคุยกับทีม Backend เพื่อเพิ่มตารางใหม่ก่อน ถ้าต้องการใช้ต่อ */}
+ 
+              {/* หมายเหตุ: ฟีเจอร์อัปโหลดกราฟสาขาแยก ยังไม่มีตารางรองรับใน Backend */}
               <Card
                 title="อัปโหลดไฟล์กราฟสาขา"
                 style={{ borderRadius: 16, border: "1px solid #ffd591", opacity: 0.7 }}
@@ -294,45 +388,76 @@ function UploadPage() {
                 />
               </Card>
             </div>
-
-            {/* ฝั่งขวา: รายชื่อตารางในระบบ */}
+ 
+            {/* ฝั่งขวา: คลังข้อมูลปัจจุบัน — ดู/ลบได้ต่อตาราง */}
             <Card
-              title="ตารางทั้งหมดในระบบ"
+              title={
+                <span>
+                  <DatabaseOutlined style={{ marginRight: 8, color: "#0077b6" }} />
+                  คลังข้อมูลปัจจุบันในระบบ
+                </span>
+              }
               style={{ borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
               bodyStyle={{ padding: 20 }}
+              loading={tablesLoading}
             >
               <p style={{ color: "#666", fontSize: 13, marginBottom: 16 }}>
-                รายชื่อตารางที่พร้อมนำเข้าข้อมูล — เลือกจาก dropdown ด้านซ้ายเพื่ออัปโหลด
+                จำนวนแถวจริงในแต่ละตาราง — กด "ดูข้อมูล" เพื่อตรวจสอบ หรือ "ลบ" เพื่อล้างข้อมูลทั้งตาราง
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {tables.map((t) => (
                   <div
                     key={t.table_name}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10px 14px",
+                      padding: "12px 14px",
                       background: tableName === t.table_name ? "#f0f7ff" : "#fff",
                       border: "1px solid #e5e7eb",
                       borderRadius: 10,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: "#52c41a",
-                        }}
-                      />
-                      <span style={{ fontWeight: 500, fontSize: 14 }}>{t.label}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: t.row_count > 0 ? "#52c41a" : "#d9d9d9",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span style={{ fontWeight: 500, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {t.label}
+                        </span>
+                      </div>
+                      <Tag color={t.row_count > 0 ? "green" : "default"}>{t.row_count} แถว</Tag>
                     </div>
-                    <Tag>{t.table_name}</Tag>
+                    <Space size="small">
+                      <Button
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewData(t)}
+                        disabled={t.row_count === 0}
+                      >
+                        ดูข้อมูล
+                      </Button>
+                      <Popconfirm
+                        title={`ลบข้อมูลทั้งหมดในตาราง "${t.label}"?`}
+                        description="การกระทำนี้ลบข้อมูลทั้งตารางและกู้คืนไม่ได้"
+                        okText="ลบเลย"
+                        okButtonProps={{ danger: true }}
+                        cancelText="ยกเลิก"
+                        onConfirm={() => handleDeleteData(t)}
+                        disabled={t.row_count === 0}
+                      >
+                        <Button size="small" danger icon={<DeleteOutlined />} disabled={t.row_count === 0}>
+                          ลบข้อมูล
+                        </Button>
+                      </Popconfirm>
+                    </Space>
                   </div>
                 ))}
-                {tables.length === 0 && (
+                {tables.length === 0 && !tablesLoading && (
                   <Empty description="โหลดรายชื่อตารางไม่ได้" style={{ padding: "20px 0" }} />
                 )}
               </div>
@@ -340,8 +465,8 @@ function UploadPage() {
           </div>
         </Content>
       </Layout>
-
-      {/* ── Preview Modal ── */}
+ 
+      {/* ── Preview Modal (ก่อนนำเข้า) ── */}
       <Modal
         title="ตัวอย่างข้อมูลก่อนนำเข้า"
         open={previewModalOpen}
@@ -363,7 +488,7 @@ function UploadPage() {
               <Tag color="orange">ตัดแถวสรุปออก {previewData.removed_rows} แถว</Tag>
               <Tag color="default">Encoding: {previewData.encoding}</Tag>
             </div>
-
+ 
             {previewData.warnings?.length > 0 && (
               <Alert
                 type="warning"
@@ -379,7 +504,7 @@ function UploadPage() {
                 }
               />
             )}
-
+ 
             <Table
               dataSource={previewData.preview.map((row, i) => ({ ...row, key: i }))}
               columns={previewColumns}
@@ -390,8 +515,46 @@ function UploadPage() {
           </>
         )}
       </Modal>
+ 
+      {/* ── View Data Modal (ดูข้อมูลที่มีอยู่จริงในตาราง) ── */}
+      <Modal
+        title={viewData ? `ข้อมูลในตาราง: ${viewData.label}` : "กำลังโหลด..."}
+        open={viewModalOpen}
+        onCancel={() => {
+          setViewModalOpen(false);
+          setViewData(null);
+        }}
+        width={1000}
+        footer={[
+          <Button key="close" onClick={() => setViewModalOpen(false)}>
+            ปิด
+          </Button>,
+        ]}
+      >
+        {viewData && (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Tag color="blue">ทั้งหมดในตาราง {viewData.total_rows} แถว</Tag>
+              <Tag color="default">แสดง {viewData.showing} แถวแรก</Tag>
+            </div>
+            <Table
+              loading={viewLoading}
+              dataSource={viewData.rows.map((row, i) => ({ ...row, key: i }))}
+              columns={viewColumns}
+              size="small"
+              scroll={{ x: true, y: 400 }}
+              pagination={{ 
+                        defaultPageSize: 10,
+                        pageSizeOptions: ["10", "20", "50", "100"],
+                        showSizeChanger: true,
+                        showTotal: (total) => `รวม ${total} รายการ`
+                      }}
+            />
+          </>
+        )}
+      </Modal>
     </Layout>
   );
 }
-
+ 
 export default UploadPage;
